@@ -1,32 +1,44 @@
 name: notion_save_pro
 description: Save web articles to Notion with templates - Mobile version of Save to Notion Chrome extension
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  
+
   # HTTP istekleri için
   http: ^1.2.0
-  
+
   # Paylaşılan içeriği almak için
   receive_sharing_intent: ^1.8.1
-  
+
   # Toast mesajları için
   fluttertoast: ^8.2.4
-  
+
   # HTML parse için
   html: ^0.15.4
-  
+
   # Güzel fontlar
   google_fonts: ^6.1.0
-  
-  # Ortam değişkenleri için
+
+  # Ortam değişkenleri için (OAuth client secret için)
   flutter_dotenv: ^5.1.0
+
+  # OAuth token'ları güvenli saklamak için
+  flutter_secure_storage: ^9.0.0
+
+  # OAuth redirect için
+  url_launcher: ^6.2.4
+
+  # Deep link handling (OAuth callback)
+  app_links: ^6.3.3
+
+  # Kullanıcı tercihlerini saklamak için
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

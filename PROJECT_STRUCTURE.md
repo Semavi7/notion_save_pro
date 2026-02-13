@@ -5,7 +5,7 @@
 ```
 notion_save_pro/
 │
-├── 📄 .env                          # API anahtarları (GİZLİ - düzenleyin!)
+├── 📄 .env                          # OAuth credentials (GİZLİ - düzenleyin!)
 ├── 📄 .gitignore                    # Git ignore kuralları
 ├── 📄 pubspec.yaml                  # Flutter bağımlılıkları
 ├── 📄 README.md                     # Proje dokümantasyonu
@@ -17,9 +17,16 @@ notion_save_pro/
 │   │
 │   ├── 📂 models/                   # Veri modelleri
 │   │   ├── 📄 article.dart          # Makale modeli
-│   │   └── 📄 notion_template.dart  # Şablon modeli
+│   │   ├── 📄 notion_database.dart  # Database modeli
+│   │   └── 📄 notion_template.dart  # Template modeli
+│   │
+│   ├── 📂 screens/                  # UI ekranları
+│   │   ├── 📄 login_screen.dart     # OAuth login ekranı
+│   │   ├── 📄 database_selection_screen.dart # Database seçim
+│   │   └── 📄 template_selection_screen.dart # Template seçim
 │   │
 │   ├── 📂 services/                 # Servis katmanı
+│   │   ├── 📄 auth_service.dart     # OAuth token yönetimi
 │   │   ├── 📄 notion_service.dart   # Notion API iletişimi
 │   │   └── 📄 web_scraper_service.dart # Web scraping
 │   │
@@ -30,7 +37,7 @@ notion_save_pro/
     └── 📂 app/
         ├── 📄 build.gradle          # Android build ayarları
         └── 📂 src/main/
-            ├── 📄 AndroidManifest.xml # Uygulama izinleri ve intent'ler
+            ├── 📄 AndroidManifest.xml # Uygulama izinleri ve deep links
             └── 📂 res/values/
                 └── 📄 styles.xml     # Android temaları
 ```
@@ -43,17 +50,21 @@ notion_save_pro/
 
 #### `.env`
 ```env
-NOTION_API_KEY=secret_...
-TARGET_DATABASE_ID=...
-TEMPLATES_DATABASE_ID=...
+NOTION_CLIENT_ID=...
+NOTION_CLIENT_SECRET=secret_...
+NOTION_REDIRECT_URI=https://...
 ```
-**Amaç:** API anahtarlarını ve database ID'lerini saklar  
-**⚠️ ÖNEMLİ:** Bu dosyayı düzenleyip kendi bilgilerinizi girin!
+**Amaç:** OAuth credentials'larını saklar  
+**⚠️ ÖNEMLİ:** Bu dosyayı düzenleyip kendi OAuth bilgilerinizi girin!
 
 #### `pubspec.yaml`
 **Amaç:** Flutter proje ayarları ve bağımlılıklar
 **İçerir:**
 - `http` - HTTP istekleri için
+- `flutter_secure_storage` - OAuth token'ları güvenli saklamak için
+- `url_launcher` - OAuth tarayıcısını açmak için
+- `app_links` - Deep link handling için
+- `shared_preferences` - Kullanıcı tercihlerini saklamak için
 - `receive_sharing_intent` - Paylaşım intent'lerini almak için
 - `fluttertoast` - Toast mesajları için
 - `html` - HTML parsing için
@@ -64,33 +75,88 @@ TEMPLATES_DATABASE_ID=...
 
 ### 💻 Kaynak Kod (lib/)
 
-#### `main.dart` (398 satır)
+#### `main.dart`
 **Ana uygulama dosyası**
 
 **İçerik:**
 - `NotionSaveProApp` - Material app wrapper
+- `SplashScreen` - Başlangıç ekranı ve yönlendirme
 - `SaveHandler` - Paylaşım yöneticisi
-- `_SaveHandlerState` - State management
+- Routes - /login, /database-selection, /template-selection, /home
 
 **Sorumluluklar:**
+- OAuth durumunu kontrol etme
+- Login ekranına veya ana ekrana yönlendirme
 - Paylaşım intent'lerini dinleme
-- Save dialog'u gösterme
-- Şablonları listeleme
-- Kaydetme işlemini koordine etme
-- Hata yönetimi
+- URL işleme ve kaydetme
+
+---
+
+#### `screens/login_screen.dart`
+**OAuth login ekranı**
+
+**İçerik:**
+- OAuth login butonu
+- Deep link callback handling
+- Token exchange işlemi
 
 **Ana metodlar:**
 ```dart
-_initializeApp()        // Başlatma
-_setupSharingIntent()   // Intent dinleyici
-_handleSharedUrl()      // URL işleme
-_saveToNotion()         // Kaydetme
-_showSaveDialog()       // UI dialog
+_launchOAuth()          // Tarayıcıda OAuth sayfasını açar
+_handleOAuthCallback()  // Deep link'i dinler
+_processOAuthCallback() // Token exchange yapar
 ```
 
 ---
 
-#### `models/article.dart` (17 satır)
+#### `screens/database_selection_screen.dart`
+**Database seçim ekranı**
+
+**İçerik:**
+- Kullanıcının database'lerini listeler
+- Database seçimi
+- Seçimi kaydetme
+
+**Ana metodlar:**
+```dart
+_loadDatabases()     // Notion'dan database'leri çeker
+_selectDatabase()    // Database'i seçer ve kaydeder
+```
+
+---
+
+#### `screens/template_selection_screen.dart`
+**Template seçim ekranı**
+
+**İçerik:**
+- Seçili database'in template'lerini listeler
+- Template seçimi
+- Seçimi kaydetme
+
+**Ana metodlar:**
+```dart
+_loadTemplates()     // Database'den template'leri çeker
+_selectTemplate()    // Template'i seçer ve kaydeder
+```
+
+---
+
+#### `models/notion_database.dart`
+**Database veri modeli**
+
+```dart
+class NotionDatabase {
+  final String id;     // Database ID
+  final String title;  // Database adı
+  final String? icon;  // Database ikon (emoji)
+  
+  factory NotionDatabase.fromJson(Map<String, dynamic> json)
+}
+```
+
+---
+
+#### `models/article.dart`
 **Makale veri modeli**
 
 ```dart
@@ -105,23 +171,54 @@ class Article {
 
 ---
 
-#### `models/notion_template.dart` (33 satır)
-**Şablon veri modeli**
+#### `models/notion_template.dart`
+**Template veri modeli**
 
 ```dart
 class NotionTemplate {
-  final String id;    // Notion page ID
-  final String name;  // Şablon adı
+  final String id;    // Template page ID
+  final String name;  // Template adı
   
   factory NotionTemplate.fromJson(Map<String, dynamic> json)
 }
 ```
 
-**Amaç:** Notion'dan gelen şablon verilerini parse eder
+**Amaç:** Notion'dan gelen template verilerini parse eder
 
 ---
 
-#### `services/notion_service.dart` (235 satır)
+#### `services/auth_service.dart`
+**OAuth token ve tercih yönetimi servisi**
+
+**Ana metodlar:**
+
+| Metod | Açıklama |
+|-------|----------|
+| `exchangeCodeForToken(code)` | OAuth code'u token'a çevirir |
+| `getAccessToken()` | Kayıtlı access token''ı getirir |
+| `isLoggedIn()` | Kullanıcı giriş yapmış mı kontrol |
+| `logout()` | Çıkış yap, token'ları temizle |
+| `saveSelectedDatabaseId()` | Seçili database ID'sini kaydet |
+| `getSelectedDatabaseId()` | Seçili database ID'sini getir |
+| `saveSelectedTemplateId()` | Seçili template ID'sini kaydet |
+| `getSelectedTemplateId()` | Seçili template ID'sini getir |
+
+**Özellikler:**
+- ✅ `flutter_secure_storage` ile güvenli token saklama
+- ✅ `shared_preferences` ile kullanıcı tercihleri
+- ✅ Otomatik token yönetimi
+
+**Token Exchange Flow:**
+```dart
+1. OAuth callback code alır
+2. Notion'a POST isteği (code + client_id + client_secret)
+3. Access token alır
+4. Secure storage'a kaydeder
+```
+
+---
+
+#### `services/notion_service.dart`
 **Notion API servisi**
 
 **Ana metodlar:**
@@ -152,7 +249,7 @@ PATCH /v1/blocks/{id}/children     → Blok ekle
 
 ---
 
-#### `services/web_scraper_service.dart` (387 satır)
+#### `services/web_scraper_service.dart`
 **Web scraping servisi**
 
 **Ana metodlar:**
@@ -190,20 +287,19 @@ maxTextLength = 1900  // Notion limit: 2000
 
 ---
 
-#### `utils/app_config.dart` (30 satır)
-**Konfigürasyon yöneticisi**
+#### `utils/app_config.dart`
+**OAuth konfigürasyon yöneticisi**
 
 **Metodlar:**
 ```dart
-static String get notionApiKey           // API key
-static String get targetDatabaseId       // Ana DB ID
-static String get templatesDatabaseId    // Şablon DB ID
-static bool get isValid                  // Validasyon
-static Map<String, String> get headers   // HTTP headers
-static String get configErrorMessage     // Hata mesajı
+static String get notionClientId        // OAuth Client ID
+static String get notionClientSecret    // OAuth Client Secret
+static String get notionRedirectUri     // OAuth Redirect URI
+static bool get isValid                 // Validasyon
+static String get configErrorMessage    // Hata mesajı
 ```
 
-**Amaç:** .env dosyasından konfigürasyonu yönetir
+**Amaç:** .env dosyasından OAuth konfigürasyonunu yönetir
 
 ---
 
@@ -220,8 +316,8 @@ applicationId "com.notionsavepro.app"
 
 ---
 
-#### `android/app/src/main/AndroidManifest.xml` (54 satır)
-**Uygulama izinleri ve intent filter'ları**
+#### `android/app/src/main/AndroidManifest.xml`
+**Uygulama izinleri ve intent filter'ları + deep links**
 
 **İzinler:**
 ```xml
@@ -234,6 +330,12 @@ applicationId "com.notionsavepro.app"
 <intent-filter>
     <action android:name="android.intent.action.SEND"/>
     <data android:mimeType="text/plain"/>
+</intent-filter>
+
+<!-- OAuth deep link -->
+<intent-filter>
+    <action android:name="android.intent.action.VIEW"/>
+    <data android:scheme="notionsavepro" android:host="oauth"/>
 </intent-filter>
 ```
 
@@ -261,14 +363,64 @@ android:launchMode="singleTask"  // Her paylaşımda yeni instance oluşmasın
 
 ## 🔄 Veri Akışı
 
-### Kaydetme İşlemi Akışı:
+### İlk Kurulum Akışı:
+
+```
+1. [Uygulama Açılır] → SplashScreen
+   ↓
+2. [Token Kontrol] → AuthService.isLoggedIn()
+   ↓
+3a. Token YOK → LoginScreen
+   ↓
+4. [Login Butonu] → OAuth URL oluştur
+   ↓
+5. [Tarayıcı] → Notion OAuth sayfası
+   ↓
+6. [Kullanıcı] → Workspace seç, database'lere erişim ver
+   ↓
+7. [Notion] → Vercel callback: ?code=XXX
+   ↓
+8. [Vercel] → notionsavepro://oauth?code=XXX
+   ↓
+9. [Deep Link] → Uygulama açılır
+   ↓
+10. [LoginScreen] → AuthService.exchangeCodeForToken()
+   ↓
+11. [Token Kaydedildi] → DatabaseSelectionScreen
+   ↓
+12. [NotionService] → searchDatabases()
+   ↓
+13. [Kullanıcı] → Database seçer
+   ↓
+14. [AuthService] → Database ID kaydedilir
+   ↓
+15. [TemplateSelectionScreen] → getDatabaseTemplates()
+   ↓
+16. [Kullanıcı] → Template seçer (opsiyonel)
+   ↓
+17. [AuthService] → Template ID kaydedilir
+   ↓
+18. ✅ Kurulum tamamlandı → SaveHandler (home)
+```
+
+### Sonraki Açılışlar:
+
+```
+1. [Uygulama Açılır] → SplashScreen
+   ↓
+2. [Token Kontrol] → Token VAR
+   ↓
+3. ✅ Direk SaveHandler'a yönlendir
+```
+
+### Makale Kaydetme İşlemi Akışı:
 
 ```
 1. [Tarayıcı] → Paylaş butonu
    ↓
 2. [Android] → Intent filter yakalar
    ↓
-3. [main.dart] → ReceiveSharingIntent.getTextStream()
+3. [SaveHandler] → ReceiveSharingIntent.getTextStream()
    ↓
 4. [SaveHandler] → _handleSharedUrl(url)
    ↓
@@ -278,17 +430,21 @@ android:launchMode="singleTask"  // Her paylaşımda yeni instance oluşmasın
    ├── Content parsing
    └── Notion blokları oluştur
    ↓
-6. [NotionService] → savePage(article, template)
-   ├── getTemplateBlocks(templateId)
+6. [Dialog] → Başlık düzenleme, Kaydet butonu
+   ↓
+7. [NotionService] → savePage(article)
+   ├── AuthService'den database ID al
+   ├── AuthService'den template ID al
+   ├── getTemplateBlocks(templateId) (varsa)
    ├── Blokları birleştir
    ├── _createPage() → İlk 100 blok
    └── _appendBlocks() → Kalan bloklar
    ↓
-7. [Notion API] → Sayfa oluşturuldu ✅
+8. [Notion API] → Sayfa oluşturuldu ✅
    ↓
-8. [UI] → Toast: "Başarıyla kaydedildi!"
+9. [UI] → Toast: "Başarıyla kaydedildi!"
    ↓
-9. [App] → SystemNavigator.pop() → Kapat
+10. [App] → SystemNavigator.pop() → Kapat
 ```
 
 ---
@@ -381,11 +537,15 @@ print('📄 Data: ${response.body}');
 
 | Kategori | Dosya Sayısı | Toplam Satır |
 |----------|--------------|--------------|
-| Dart (lib/) | 6 | ~1200 |
-| Android | 3 | ~135 |
+| Dart - Models | 3 | ~100 |
+| Dart - Screens | 3 | ~400 |
+| Dart - Services | 3 | ~700 |
+| Dart - Utils | 1 | ~50 |
+| Dart - Main | 1 | ~250 |
+| Android | 3 | ~150 |
 | Konfigürasyon | 4 | ~100 |
-| Dokümantasyon | 3 | ~500 |
-| **TOPLAM** | **16** | **~1935** |
+| Dokümantasyon | 3 | ~600 |
+| **TOPLAM** | **21** | **~2350** |
 
 ---
 

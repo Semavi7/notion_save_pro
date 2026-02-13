@@ -2,135 +2,190 @@
 
 ## 📋 İçindekiler
 
-1. [Notion API Kurulumu](#1-notion-api-kurulumu)
-2. [Veritabanı Oluşturma](#2-veritabanı-oluşturma)
+1. [Notion OAuth Integration Kurulumu](#1-notion-oauth-integration-kurulumu)
+2. [Vercel Callback Sayfası (Opsiyonel)](#2-vercel-callback-sayfası-opsiyonel)
 3. [Uygulama Kurulumu](#3-uygulama-kurulumu)
 4. [Test ve Kullanım](#4-test-ve-kullanım)
 
 ---
 
-## 1. Notion API Kurulumu
+## 1. Notion OAuth Integration Kurulumu
 
-### Adım 1.1: Integration Oluştur
+### Adım 1.1: Public Integration Oluştur
 
 1. Tarayıcınızda şu linki açın: https://www.notion.so/my-integrations
 2. **"+ New integration"** butonuna tıklayın
 3. Formu doldurun:
    - **Name:** "Notion Save Pro" (veya istediğiniz isim)
    - **Associated workspace:** Workspace'inizi seçin
-   - **Type:** Internal
+   - **Type:** **Public** (ÖNEMLİ!)
 4. **"Submit"** butonuna tıklayın
 
-### Adım 1.2: API Key'i Kopyala
+### Adım 1.2: OAuth Ayarları
 
-1. Yeni oluşturulan integration sayfasında **"Internal Integration Token"** bölümüne gidin
-2. **"Show"** butonuna tıklayın
-3. Token'ı kopyalayın (şuna benzer: `secret_AbCdEf123456...`)
-4. ⚠️ **GÜVENLİ BİR YERDE SAKLAYIN!**
+1. Integration sayfasında **"OAuth Domain & URIs"** bölümüne gidin
+2. **Redirect URIs** kısmına şunu ekleyin:
+   ```
+   https://your-domain.vercel.app/oauth-callback.html
+   ```
+3. **"Save changes"** tıklayın
 
----
+### Adım 1.3: Capabilities Ayarları
 
-## 2. Veritabanı Oluşturma
+1. **"Capabilities"** sekmesine gidin
+2. Şu izinleri aktif edin:
+   - ✅ **Read content**
+   - ✅ **Update content**
+   - ✅ **Insert content**
+3. **"Save changes"** tıklayın
 
-### Adım 2.1: Ana Veritabanı (Kayıt Yeri)
+### Adım 1.4: OAuth Credentials'ı Kopyala
 
-Bu veritabanına makaleler kaydedilecek.
-
-#### Oluşturma:
-
-1. Notion'da yeni bir sayfa oluşturun
-2. Sayfaya isim verin: **"Kaydedilen Makaleler"**
-3. `/database` yazıp **"Table - Inline"** seçin
-
-#### Property'ler:
-
-Şu sütunları ekleyin:
-
-| Property Adı | Tip    | Açıklama                |
-|--------------|--------|-------------------------|
-| Name         | Title  | Makale başlığı (otomatik var) |
-| URL          | URL    | Makale linki            |
-| Status       | Select | Opsiyonel - Okundu/Okunmadı |
-
-**Status için seçenekler ekleyin:**
-- 📖 Okunacak
-- ✅ Okundu
-- ⭐ Favoriler
-
-#### Veritabanı ID'sini Al:
-
-1. Veritabanı sayfasını tarayıcıda açın
-2. URL'ye bakın:
-```
-https://www.notion.so/workspace/abc123def456?v=...
-                              ^^^^^^^^^^^^^
-                              Bu kısım Database ID
-```
-3. `abc123def456` kısmını kopyalayın
-4. Not defterine yapıştırın: `TARGET_DATABASE_ID=abc123def456`
-
-#### Integration'ı Bağla:
-
-1. Veritabanı sayfasının sağ üstündeki **"..."** menüsüne tıklayın
-2. **"Add connections"** → **"Notion Save Pro"** seçin
-3. **"Confirm"** edin
+1. **"Secrets"** sekmesine gidin
+2. **OAuth client ID** ve **OAuth client secret**'ı kopyalayın
+3. ⚠️ **GÜVENLİ BİR YERDE SAKLAYIN!**
 
 ---
 
-### Adım 2.2: Şablonlar Veritabanı
+## 2. Vercel Callback Sayfası (Opsiyonel)
 
-Bu veritabanında şablonlarınızı saklayacaksınız.
+**Not:** Kendi Vercel domain'inizi oluşturup kullanabilirsiniz. Kendi domain'inizi kullanmak isterseniz:
 
-#### Oluşturma:
+### Adım 2.1: oauth-callback.html Oluştur
 
-1. Yeni bir sayfa oluşturun: **"Makale Şablonları"**
-2. `/database` yazıp **"Table - Inline"** seçin
+Bu sayfayı bir dizinde oluşturun ve Vercel'e deploy edin:
 
-#### Property:
+**Dosya: `oauth-callback.html`**
 
-Sadece **Name** (Title) property'si yeterli.
+```html
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion OAuth - Giriş Yapılıyor</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h1 { margin: 0 0 10px 0; font-size: 24px; }
+        p { margin: 5px 0; opacity: 0.9; }
+        .error {
+            background: #ff4444;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="title">🔐 Notion ile Giriş</h1>
+        <div class="spinner" id="spinner"></div>
+        <p id="message">Yönlendiriliyorsunuz...</p>
+        <div id="error-container"></div>
+    </div>
 
-#### Şablon Sayfaları Oluştur:
+    <script>
+        // URL parametrelerini parse et
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
 
-Database'de her satır bir şablondur:
+        const titleEl = document.getElementById('title');
+        const messageEl = document.getElementById('message');
+        const spinnerEl = document.getElementById('spinner');
+        const errorContainer = document.getElementById('error-container');
 
-| Name                  |
-|-----------------------|
-| 📚 Genel Makale      |
-| 💻 Teknik Yazı       |
-| 📰 Haber             |
-
-#### Şablonları Düzenle:
-
-Her satırı açıp içeriği düzenleyin:
-
-**Örnek: "Genel Makale" şablonu:**
-
+        if (error) {
+            // Hata durumu
+            titleEl.textContent = '❌ Giriş Başarısız';
+            messageEl.textContent = 'Bir hata oluştu';
+            spinnerEl.style.display = 'none';
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `
+                <strong>Hata:</strong> ${error}<br>
+                ${errorDescription ? `<small>${errorDescription}</small>` : ''}
+            `;
+            errorContainer.appendChild(errorDiv);
+            
+            console.error('OAuth Error:', error, errorDescription);
+        } else if (code) {
+            // Başarılı - Uygulamaya deep link ile yönlendir
+            messageEl.textContent = 'Uygulama açılıyor...';
+            
+            console.log('✅ Authorization code received:', code);
+            
+            // Deep link ile uygulamayı aç
+            const deepLink = `notionsavepro://oauth?code=${encodeURIComponent(code)}`;
+            
+            // Uygulamayı açmayı dene
+            window.location.href = deepLink;
+            
+            // Eğer uygulama yüklü değilse kullanıcıya bilgi ver
+            setTimeout(() => {
+                messageEl.textContent = 'Uygulama açılmadı mı?';
+                const infoP = document.createElement('p');
+                infoP.innerHTML = '<small>Notion Save Pro uygulamasını açın ve tekrar deneyin.</small>';
+                errorContainer.appendChild(infoP);
+            }, 3000);
+        } else {
+            // Ne code ne de error var - beklenmeyen durum
+            titleEl.textContent = '⚠️ Beklenmeyen Durum';
+            messageEl.textContent = 'OAuth parametreleri bulunamadı';
+            spinnerEl.style.display = 'none';
+            console.warn('No code or error parameter found in URL');
+        }
+    </script>
+</body>
+</html>
 ```
-📚 Genel Makale
 
-## 📝 Özet
-[Buraya özet gelecek]
+**Özellikler:**
+- ✅ Modern ve şık tasarım
+- ✅ Loading animasyonu
+- ✅ Hata durumlarında açıklayıcı mesajlar
+- ✅ Mobil uyumlu
+- ✅ Deep link ile otomatik yönlendirme
+- ✅ Eğer uygulama açılmazsa bilgilendirme
 
-## 🎯 Ana Noktalar
-- 
+### Adım 2.2: Vercel'e Deploy Et
 
-## 💭 Düşüncelerim
-[Notlarım]
-
----
-[Makale içeriği buradan başlayacak]
-```
-
-#### Veritabanı ID'sini Al:
-
-1. Şablonlar veritabanı sayfasını açın
-2. URL'den ID'yi kopyalayın (yukarıdaki gibi)
-3. Not edin: `TEMPLATES_DATABASE_ID=xyz789...`
-
-#### Integration'ı Bağla:
-
-Yukarıdaki gibi connection ekleyin.
+1. Vercel hesabı oluşturun: https://vercel.com
+2. Dosyayı deploy edin
+3. HTTPS URL'yi not edin
+4. `.env` dosyasında `NOTION_REDIRECT_URI`'yi güncelleyin
+5. Notion Integration ayarlarında redirect URI'yi güncelleyin
 
 ---
 
@@ -179,17 +234,15 @@ nano .env
 Şu şekilde doldurun:
 
 ```env
-# Notion API anahtarınız (secret_ ile başlar)
-NOTION_API_KEY=secret_AbCdEf123456GhIjKl789MnOpQr
+# Notion OAuth Credentials (Integration'dan kopyalayın)
+NOTION_CLIENT_ID=your-client-id-here
+NOTION_CLIENT_SECRET=secret_your-client-secret-here
 
-# Ana veritabanı ID (32 karakter)
-TARGET_DATABASE_ID=abc123def456ghi789jkl012mno345
-
-# Şablonlar veritabanı ID (32 karakter)
-TEMPLATES_DATABASE_ID=xyz789uvw456rst123opq890lmn567
+# OAuth Redirect URI (Vercel URL veya kendi domain'iniz)
+NOTION_REDIRECT_URI=https://your-domain.vercel.app/oauth-callback.html
 ```
 
-**⚠️ Gerçek değerlerinizi yazın!**
+**⚠️ Kendi OAuth credentials'larınızı yazın!**
 
 ### Adım 3.4: APK Oluştur
 
@@ -229,6 +282,22 @@ adb install build/app/outputs/flutter-apk/app-release.apk
 
 ### İlk Test
 
+**İlk Kurulum:**
+
+1. **Uygulamayı açın**
+2. **"Notion ile Giriş Yap"** butonuna tıklayın
+3. Tarayıcı açılır, Notion OAuth sayfası görünür
+4. Workspace'inizi seçin
+5. **"Select pages"** tıklayın
+6. Erişim vermek istediğiniz database'leri seçin
+7. **"Allow access"** tıklayın
+8. Uygulama açılır
+9. **Database seçin** (kaydetmek istediğiniz database)
+10. **Template seçin** (varsa)
+11. ✅ Kurulum tamamlandı!
+
+**Makale Kaydetme:**
+
 1. **Chrome'u açın** (veya başka tarayıcı)
 2. Bir haber sitesine gidin (örn: medium.com)
 3. Bir makale açın
@@ -236,30 +305,32 @@ adb install build/app/outputs/flutter-apk/app-release.apk
 5. **Notion Save Pro** seçin
 6. Dialog açılacak:
    - Başlık otomatik gelecek
-   - Şablon seçin
-   - **Kaydet**'e basın
+   - **Kaydet**'e basın (seçili database ve template kullanılır)
 7. Notion'ı açıp kontrol edin!
 
 ### Sorun Varsa
 
-#### "Konfigürasyon Hatası"
+#### "Login yapamıyorum"
 ```bash
 # .env dosyasını kontrol et:
 cat .env
 
-# Boş veya hatalıysa düzenle:
-nano .env
+# OAuth credentials kontrol et
 ```
-
-#### "Notion'a bağlanılamadı"
-- [ ] API key doğru mu?
-- [ ] Integration veritabanlarına bağlı mı?
+- [ ] NOTION_CLIENT_ID ve CLIENT_SECRET doğru mu?
+- [ ] NOTION_REDIRECT_URI doğru mu?
+- [ ] Vercel callback sayfası çalışıyor mu?
 - [ ] İnternet bağlantınız var mı?
-- [ ] Database ID'ler 32 karakter mi?
 
-#### "Şablon bulunamadı"
-- [ ] Şablonlar veritabanında en az 1 satır var mı?
-- [ ] Integration bağlantısı yapıldı mı?
+#### "Database listesi boş"
+- [ ] OAuth sırasında database'lere erişim verdiniz mi?
+- [ ] Notion'da en az bir database var mı?
+- [ ] Integration capabilities'de "Read content" aktif mi?
+- [ ] Workspace'de database'ler mevcut mu?
+
+#### "Template bulunamadı"
+- [ ] Seçtiğiniz database'de template sayfaları var mı?
+- [ ] Template'ler düzgün oluşturulmuş mu?
 - [ ] Database ID doğru mu?
 
 ### Debug Modu ile Test

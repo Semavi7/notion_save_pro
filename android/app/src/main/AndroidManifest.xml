@@ -34,6 +34,14 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="text/*"/>
             </intent-filter>
+            
+            <!-- OAuth Callback Deep Link -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="notionsavepro" android:host="oauth"/>
+            </intent-filter>
         </activity>
         
         <meta-data
