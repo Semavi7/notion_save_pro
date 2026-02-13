@@ -181,11 +181,6 @@ class _SaveHandlerState extends State<SaveHandler> {
         return;
       }
 
-      // Başlığı güncelle
-      final finalArticle = article.blocks.isEmpty
-          ? article
-          : article; // Title zaten controller'dan alınacak
-
       Fluttertoast.showToast(
         msg: "💾 Notion'a kaydediliyor...",
         toastLength: Toast.LENGTH_SHORT,
