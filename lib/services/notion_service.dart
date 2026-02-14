@@ -10,6 +10,10 @@ class NotionService {
   static const String baseUrl = 'https://api.notion.com/v1';
   static const int maxBlocksPerRequest = 100;
 
+  // Template'de içeriğin ekleneceği yeri işaretleyen marker
+  // Template'inizde bu metni içeren bir text bloğu ekleyin
+  static const String contentMarker = '<!--CONTENT-->';
+
   final AuthService _authService = AuthService();
 
   /// OAuth token kullanarak headers oluştur
@@ -155,7 +159,25 @@ class NotionService {
           {"object": "block", "type": "divider", "divider": {}},
         ];
 
-        final success = await _appendBlocks(pageId, blocksToAdd);
+        bool success = false;
+
+        // Template kullanıldıysa, marker bloğunu bul ve oraya ekle
+        if (templateId != null && templateId != 'no_template') {
+          print('🔍 Looking for content marker in template...');
+          final markerBlockId = await _findMarkerBlock(pageId);
+
+          if (markerBlockId != null) {
+            print('✅ Found marker block, inserting content after it');
+            success =
+                await _appendBlocks(pageId, blocksToAdd, afterBlockId: markerBlockId);
+          } else {
+            print('⚠️ Marker not found, adding content to the end');
+            success = await _appendBlocks(pageId, blocksToAdd);
+          }
+        } else {
+          // Template yoksa normal şekilde sona ekle
+          success = await _appendBlocks(pageId, blocksToAdd);
+        }
 
         if (success) {
           print('✅ Article content added successfully');
@@ -238,11 +260,79 @@ class NotionService {
     }
   }
 
-  /// Var olan sayfaya blok ekler
+  /// Sayfanın bloklarını getirir
+  Future<List<Map<String, dynamic>>> _getBlocks(String pageId) async {
+    try {
+      final headers = await _getHeaders();
+      final url = Uri.parse('$baseUrl/blocks/$pageId/children?page_size=100');
+
+      final response =
+          await http.get(url, headers: headers).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final results = data['results'] as List;
+        return results.cast<Map<String, dynamic>>();
+      } else {
+        print('❌ Get blocks error: ${response.statusCode} - ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('❌ Get blocks exception: $e');
+      return [];
+    }
+  }
+
+  /// Template'de content marker'ı bulur ve ID'sini döner
+  Future<String?> _findMarkerBlock(String pageId) async {
+    try {
+      final blocks = await _getBlocks(pageId);
+
+      for (final block in blocks) {
+        final blockType = block['type'];
+
+        // Paragraph bloklarında marker'ı ara
+        if (blockType == 'paragraph') {
+          final richText = block['paragraph']?['rich_text'] as List?;
+          if (richText != null) {
+            for (final text in richText) {
+              final content = text['text']?['content'] as String?;
+              if (content != null && content.contains(contentMarker)) {
+                print('✅ Found marker in block: ${block['id']}');
+                return block['id'];
+              }
+            }
+          }
+        }
+
+        // Callout bloklarında da ara (bazı kullanıcılar marker'ı callout'a koyabilir)
+        if (blockType == 'callout') {
+          final richText = block['callout']?['rich_text'] as List?;
+          if (richText != null) {
+            for (final text in richText) {
+              final content = text['text']?['content'] as String?;
+              if (content != null && content.contains(contentMarker)) {
+                print('✅ Found marker in callout block: ${block['id']}');
+                return block['id'];
+              }
+            }
+          }
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('❌ Find marker exception: $e');
+      return null;
+    }
+  }
+
+  /// Var olan sayfaya blok ekler (opsiyonel olarak belirli bir bloktan sonra)
   Future<bool> _appendBlocks(
     String pageId,
-    List<Map<String, dynamic>> blocks,
-  ) async {
+    List<Map<String, dynamic>> blocks, {
+    String? afterBlockId,
+  }) async {
     try {
       final headers = await _getHeaders();
 
@@ -252,9 +342,16 @@ class NotionService {
 
         final url = Uri.parse('$baseUrl/blocks/$pageId/children');
 
-        final body = jsonEncode({
+        final Map<String, dynamic> requestBody = {
           "children": batch,
-        });
+        };
+
+        // İlk batch için after parametresi ekle
+        if (afterBlockId != null && i == 0) {
+          requestBody["after"] = afterBlockId;
+        }
+
+        final body = jsonEncode(requestBody);
 
         final response = await http
             .patch(
