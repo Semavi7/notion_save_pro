@@ -170,6 +170,17 @@ class NotionService {
             print('✅ Found marker block, inserting content after it');
             success =
                 await _appendBlocks(pageId, blocksToAdd, afterBlockId: markerBlockId);
+
+            // İçerik eklendikten sonra marker bloğunu sil
+            if (success) {
+              print('🗑️ Deleting marker block...');
+              final deleted = await _deleteBlock(markerBlockId);
+              if (deleted) {
+                print('✅ Marker block deleted');
+              } else {
+                print('⚠️ Failed to delete marker block');
+              }
+            }
           } else {
             print('⚠️ Marker not found, adding content to the end');
             success = await _appendBlocks(pageId, blocksToAdd);
@@ -324,6 +335,27 @@ class NotionService {
     } catch (e) {
       print('❌ Find marker exception: $e');
       return null;
+    }
+  }
+
+  /// Bloğu siler
+  Future<bool> _deleteBlock(String blockId) async {
+    try {
+      final headers = await _getHeaders();
+      final url = Uri.parse('$baseUrl/blocks/$blockId');
+
+      final response =
+          await http.delete(url, headers: headers).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        print('❌ Delete block error: ${response.statusCode} - ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Delete block exception: $e');
+      return false;
     }
   }
 
