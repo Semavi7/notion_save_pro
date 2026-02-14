@@ -52,21 +52,12 @@ class NotionService {
         final data = jsonDecode(response.body);
         final results = data['results'] as List;
 
-        print('🔍 Search API returned ${results.length} total results');
-
-        // Debug: İlk birkaç sonucu göster
-        for (var i = 0; i < (results.length > 3 ? 3 : results.length); i++) {
-          print(
-              '  Result $i: ${results[i]['object']} - ${results[i]['title'] ?? results[i]['properties']?['title'] ?? 'no title'}');
-        }
-
         // Sadece database'leri filtrele (Notion API v2025-09-03'te data_source olarak döner)
         final databases = results
             .where((item) => item['object'] == 'data_source')
             .map((json) => NotionDatabase.fromJson(json))
             .toList();
 
-        print('✅ Found ${databases.length} databases');
         return databases;
       } else {
         print('❌ Search databases error: ${response.statusCode} - ${response.body}');
@@ -120,13 +111,7 @@ class NotionService {
       final templateId = await _authService.getSelectedTemplateId();
 
       if (databaseId == null) {
-        print('❌ Database seçilmemiş!');
         return false;
-      }
-
-      print('🚀 Creating page in database: $databaseId');
-      if (templateId != null && templateId != 'no_template') {
-        print('📋 Using template: $templateId');
       }
 
       // 1. Sayfa oluştur
@@ -137,22 +122,16 @@ class NotionService {
       );
 
       if (pageId == null) {
-        print('❌ Failed to create page');
         return false;
       }
 
-      print('✅ Page created: $pageId');
-
       // 2. Template kullanıldıysa biraz bekle
       if (templateId != null && templateId != 'no_template') {
-        print('⏳ Waiting for template to be applied...');
         await Future.delayed(const Duration(seconds: 3));
       }
 
       // 3. Makale bloklarını ekle
       if (article.blocks.isNotEmpty) {
-        print('📝 Adding ${article.blocks.length} article blocks...');
-
         final blocksToAdd = [
           {"object": "block", "type": "divider", "divider": {}},
           ...article.blocks,
@@ -163,41 +142,25 @@ class NotionService {
 
         // Template kullanıldıysa, marker bloğunu bul ve oraya ekle
         if (templateId != null && templateId != 'no_template') {
-          print('🔍 Looking for content marker in template...');
           final markerBlockId = await _findMarkerBlock(pageId);
 
           if (markerBlockId != null) {
-            print('✅ Found marker block, inserting content after it');
             success =
                 await _appendBlocks(pageId, blocksToAdd, afterBlockId: markerBlockId);
 
             // İçerik eklendikten sonra marker bloğunu sil
             if (success) {
-              print('🗑️ Deleting marker block...');
-              final deleted = await _deleteBlock(markerBlockId);
-              if (deleted) {
-                print('✅ Marker block deleted');
-              } else {
-                print('⚠️ Failed to delete marker block');
-              }
+              await _deleteBlock(markerBlockId);
             }
           } else {
-            print('⚠️ Marker not found, adding content to the end');
             success = await _appendBlocks(pageId, blocksToAdd);
           }
         } else {
           // Template yoksa normal şekilde sona ekle
           success = await _appendBlocks(pageId, blocksToAdd);
         }
-
-        if (success) {
-          print('✅ Article content added successfully');
-        } else {
-          print('⚠️ Failed to add article content, but page was created');
-        }
       }
 
-      print('✅ Page saved successfully: $pageId');
       return true;
     } catch (e) {
       print('❌ Save page exception: $e');
@@ -214,8 +177,6 @@ class NotionService {
     try {
       final url = Uri.parse('$baseUrl/pages');
       final headers = await _getHeaders();
-
-      print('📤 Creating page in database: $databaseId');
 
       // Template seçilmişse ve "no_template" değilse template kullan
       final useTemplate = templateId != null && templateId != 'no_template';
@@ -247,8 +208,6 @@ class NotionService {
       }
 
       final body = jsonEncode(requestBody);
-
-      print('📤 Request: ${body.substring(0, body.length > 300 ? 300 : body.length)}...');
 
       final response = await http
           .post(
@@ -309,7 +268,6 @@ class NotionService {
             for (final text in richText) {
               final content = text['text']?['content'] as String?;
               if (content != null && content.contains(contentMarker)) {
-                print('✅ Found marker in block: ${block['id']}');
                 return block['id'];
               }
             }
@@ -323,7 +281,6 @@ class NotionService {
             for (final text in richText) {
               final content = text['text']?['content'] as String?;
               if (content != null && content.contains(contentMarker)) {
-                print('✅ Found marker in callout block: ${block['id']}');
                 return block['id'];
               }
             }

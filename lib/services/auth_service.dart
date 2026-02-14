@@ -75,7 +75,6 @@ class AuthService {
           }
         }
 
-        print('✅ OAuth token exchange successful');
         return true;
       } else {
         print('❌ Token exchange error: ${response.statusCode} - ${response.body}');
@@ -146,6 +145,5 @@ class AuthService {
     await _secureStorage.deleteAll();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    print('✅ Logged out successfully');
   }
 }

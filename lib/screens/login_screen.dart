@@ -36,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
     // İlk deep link'i kontrol et
     _appLinks.getInitialLink().then((Uri? uri) {
       if (uri != null && uri.scheme == 'notionsavepro') {
-        print('📲 Initial OAuth callback in LoginScreen: $uri');
         _processOAuthCallback(uri);
       }
     });
@@ -45,7 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (Uri uri) {
         if (uri.scheme == 'notionsavepro') {
-          print('📲 OAuth callback in LoginScreen: $uri');
           _processOAuthCallback(uri);
         }
       },
@@ -59,7 +57,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _processOAuthCallback(Uri uri) async {
     final code = uri.queryParameters['code'];
     if (code != null) {
-      print('🔑 Authorization code: $code');
       Fluttertoast.showToast(msg: '🔑 Code: ${code.substring(0, 8)}...');
 
       setState(() => _isLoading = true);
@@ -68,11 +65,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final success = await _authService.exchangeCodeForToken(code);
 
       if (success && mounted) {
-        print('✅ Token exchange successful');
         Fluttertoast.showToast(msg: '✅ Login successful!');
         Navigator.pushReplacementNamed(context, '/database-selection');
       } else {
-        print('❌ Token exchange failed');
         Fluttertoast.showToast(msg: '❌ Login failed!');
         setState(() => _isLoading = false);
       }

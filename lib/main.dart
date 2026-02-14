@@ -80,27 +80,23 @@ class _SplashScreenState extends State<SplashScreen> {
     final initialUri = await _appLinks.getInitialLink();
 
     if (initialUri != null && initialUri.scheme == 'notionsavepro') {
-      print('📲 OAuth callback detected: $initialUri');
       Fluttertoast.showToast(msg: '📲 OAuth callback detected');
 
       final code = initialUri.queryParameters['code'];
 
       if (code != null) {
-        print('🔑 Authorization code: $code');
         Fluttertoast.showToast(msg: '🔑 Code received: ${code.substring(0, 8)}...');
 
         // Token exchange yap
         final success = await _authService.exchangeCodeForToken(code);
 
         if (success && mounted) {
-          print('✅ Token exchange successful, going to database selection');
           Fluttertoast.showToast(msg: '✅ Login successful!');
           // Token alındı, database selection'a git
           await Future.delayed(const Duration(milliseconds: 500));
           Navigator.pushReplacementNamed(context, '/database-selection');
           return;
         } else {
-          print('❌ Token exchange failed');
           Fluttertoast.showToast(msg: '❌ Login failed!');
         }
       }
@@ -211,7 +207,6 @@ class _SaveHandlerState extends State<SaveHandler> {
     // İlk deep link'i kontrol et (uygulama kapalıyken açılmışsa)
     _appLinks.getInitialLink().then((Uri? uri) {
       if (uri != null && uri.scheme == 'notionsavepro') {
-        print('📲 Initial OAuth callback: $uri');
         _processOAuthCallback(uri);
       }
     });
@@ -220,7 +215,6 @@ class _SaveHandlerState extends State<SaveHandler> {
     _uriLinkSubscription = _appLinks.uriLinkStream.listen(
       (Uri uri) async {
         if (uri.scheme == 'notionsavepro') {
-          print('📲 OAuth callback received: $uri');
           _processOAuthCallback(uri);
         }
       },
@@ -234,8 +228,6 @@ class _SaveHandlerState extends State<SaveHandler> {
   Future<void> _processOAuthCallback(Uri uri) async {
     final code = uri.queryParameters['code'];
     if (code != null) {
-      print('🔑 Authorization code: $code');
-
       // Token exchange
       final success = await _authService.exchangeCodeForToken(code);
 
