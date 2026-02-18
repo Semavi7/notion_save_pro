@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widget_previews.dart'; // Önizleme için eklendi
 import '../services/auth_service.dart';
 import '../services/notion_service.dart';
 import '../models/notion_template.dart';
@@ -131,34 +132,37 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   Widget _buildContent() {
     if (_error != null && _templates.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.info_outline,
-                size: 64,
-                color: Colors.orange,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => _selectTemplate(null),
-                child: const Text('Template Olmadan Devam Et'),
-              ),
-              const SizedBox(height: 12),
-              TextButton.icon(
-                onPressed: _loadTemplates,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Tekrar Dene'),
-              ),
-            ],
+        // GÜNCELLENDİ: Hata/Bilgi ekranı taşmasın diye SingleChildScrollView eklendi
+        child: SingleChildScrollView( 
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  size: 64,
+                  color: Colors.orange,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => _selectTemplate(null),
+                  child: const Text('Template Olmadan Devam Et'),
+                ),
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: _loadTemplates,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Tekrar Dene'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -240,4 +244,18 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
       },
     );
   }
+}
+
+// ----- ÖNİZLEME (PREVIEW) BÖLÜMÜ -----
+@Preview()
+Widget templateSelectionScreenPreview() {
+  
+  if (!locator.isRegistered<AuthService>() || !locator.isRegistered<NotionService>()) {
+    setupLocator(); 
+  }
+
+  return const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: TemplateSelectionScreen(),
+  );
 }

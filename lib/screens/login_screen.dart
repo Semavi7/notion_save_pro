@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/widget_previews.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_links/app_links.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -49,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       onError: (err) {
-        print('❌ URI link error: $err');
+        debugPrint('❌ URI link error: $err');
       },
     );
   }
@@ -126,6 +127,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        // Arka plan gradientinin tüm ekranı kaplaması için sonsuz genişlik ve yükseklik
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -137,118 +141,123 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo/Icon
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(
-                    Icons.bookmarks_rounded,
-                    size: 60,
-                    color: Colors.black,
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Başlık
-                const Text(
-                  'Notion Save Pro',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Alt başlık
-                Text(
-                  'Web içeriklerini Notion\'a kaydet',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[400],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 48),
-
-                // Özellikler
-                _buildFeature(Icons.link, 'URL\'leri kolayca paylaş'),
-                const SizedBox(height: 16),
-                _buildFeature(Icons.description, 'Kendi template\'lerini kullan'),
-                const SizedBox(height: 16),
-                _buildFeature(Icons.storage, 'Database\'lerini yönet'),
-
-                const Spacer(),
-
-                // Login butonu
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _startOAuthFlow,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+          child: Center( // İçeriği dikeyde ortalamak için Center ekledik
+            child: SingleChildScrollView( // Taşmayı önleyen ve kaydırma sağlayan widget
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo/Icon
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      elevation: 0,
+                      child: const Icon(
+                        Icons.bookmarks_rounded,
+                        size: 60,
+                        color: Colors.black,
+                      ),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.black,
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/notion_icon.png',
+
+                    const SizedBox(height: 32),
+
+                    // Başlık
+                    const Text(
+                      'Notion Save Pro',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Alt başlık
+                    Text(
+                      'Web içeriklerini Notion\'a kaydet',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[400],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 48),
+
+                    // Özellikler
+                    _buildFeature(Icons.link, 'URL\'leri kolayca paylaş'),
+                    const SizedBox(height: 16),
+                    _buildFeature(Icons.description, 'Kendi template\'lerini kullan'),
+                    const SizedBox(height: 16),
+                    _buildFeature(Icons.storage, 'Database\'lerini yönet'),
+
+                    // Önceden Spacer() olan yere sabit bir boşluk verdik
+                    const SizedBox(height: 48),
+
+                    // Login butonu
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _startOAuthFlow,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
                                 width: 24,
                                 height: 24,
-                                errorBuilder: (_, __, ___) => const Icon(Icons.login),
-                              ),
-                              const SizedBox(width: 12),
-                              const Text(
-                                'Notion ile Giriş Yap',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.black,
                                 ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/notion_icon.png',
+                                    width: 24,
+                                    height: 24,
+                                    errorBuilder: (_, __, ___) => const Icon(Icons.login),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Notion ile Giriş Yap',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                  ),
-                ),
+                      ),
+                    ),
 
-                const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                // Bilgilendirme
-                Text(
-                  'Notion hesabınıza güvenli bir şekilde bağlanacaksınız',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
+                    // Bilgilendirme
+                    Text(
+                      'Notion hesabınıza güvenli bir şekilde bağlanacaksınız',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -283,4 +292,18 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
+}
+
+// ----- ÖNİZLEME (PREVIEW) BÖLÜMÜ -----
+@Preview()
+Widget loginScreenPreview() {
+  // Preview ortamı için locator'ı kontrol edip başlatıyoruz
+  if (!locator.isRegistered<AuthService>()) {
+    setupLocator(); 
+  }
+
+  return const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: LoginScreen(),
+  );
 }

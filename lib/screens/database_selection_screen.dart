@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widget_previews.dart';
 import '../services/auth_service.dart';
 import '../services/notion_service.dart';
 import '../models/notion_database.dart';
@@ -83,31 +84,34 @@ class _DatabaseSelectionScreenState extends State<DatabaseSelectionScreen> {
     );
   }
 
+  // GÜNCELLENDİ: Hata ekranı uzun mesajlarda taşmasın diye SingleChildScrollView eklendi
   Widget _buildError() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadDatabases,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Tekrar Dene'),
-            ),
-          ],
+      child: SingleChildScrollView( // Taşmaya karşı güvenlik kalkanı
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _error ?? 'Bilinmeyen bir hata oluştu.', // null check güvenliği eklendi
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _loadDatabases,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Tekrar Dene'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -157,4 +161,18 @@ class _DatabaseSelectionScreenState extends State<DatabaseSelectionScreen> {
       },
     );
   }
+}
+
+// ----- ÖNİZLEME (PREVIEW) BÖLÜMÜ -----
+@Preview()
+Widget databaseSelectionScreenPreview() {
+  
+  if (!locator.isRegistered<AuthService>()) {
+    setupLocator(); 
+  }
+
+  return const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: DatabaseSelectionScreen(),
+  );
 }
