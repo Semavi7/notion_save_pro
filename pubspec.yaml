@@ -40,6 +40,9 @@ dependencies:
   # Kullanıcı tercihlerini saklamak için
   shared_preferences: ^2.2.2
 
+  # Dependency Injection için
+  get_it: ^7.6.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

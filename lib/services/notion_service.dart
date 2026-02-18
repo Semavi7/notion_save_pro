@@ -4,6 +4,7 @@ import '../models/article.dart';
 import '../models/notion_database.dart';
 import '../models/notion_template.dart';
 import 'auth_service.dart';
+import '../utils/locator.dart';
 
 /// Notion API ile iletişim servisi
 class NotionService {
@@ -14,7 +15,7 @@ class NotionService {
   // Template'inizde bu metni içeren bir text bloğu ekleyin
   static const String contentMarker = '<!--CONTENT-->';
 
-  final AuthService _authService = AuthService();
+  final AuthService _authService = locator<AuthService>();
 
   /// OAuth token kullanarak headers oluştur
   Future<Map<String, String>> _getHeaders() async {

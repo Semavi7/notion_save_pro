@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/notion_service.dart';
 import '../models/notion_template.dart';
+import '../utils/locator.dart';
 
 /// Template seçim ekranı
 class TemplateSelectionScreen extends StatefulWidget {
@@ -12,8 +13,8 @@ class TemplateSelectionScreen extends StatefulWidget {
 }
 
 class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
-  final AuthService _authService = AuthService();
-  final NotionService _notionService = NotionService();
+  final AuthService _authService = locator<AuthService>();
+  final NotionService _notionService = locator<NotionService>();
 
   List<NotionTemplate> _templates = [];
   bool _isLoading = true;

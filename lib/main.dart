@@ -11,6 +11,7 @@ import 'services/notion_service.dart';
 import 'services/web_scraper_service.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
+import 'utils/locator.dart';
 import 'screens/database_selection_screen.dart';
 import 'screens/template_selection_screen.dart';
 
@@ -23,6 +24,9 @@ void main() async {
   } catch (e) {
     print('⚠️ .env dosyası yüklenemedi: $e');
   }
+
+  // Servisleri kaydet (Dependency Injection)
+  setupLocator();
 
   runApp(const NotionSaveProApp());
 }
@@ -66,7 +70,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  final AuthService _authService = AuthService();
+  final AuthService _authService = locator<AuthService>();
   final AppLinks _appLinks = AppLinks();
 
   @override
@@ -168,9 +172,9 @@ class _SaveHandlerState extends State<SaveHandler> {
   late StreamSubscription? _uriLinkSubscription;
   late AppLinks _appLinks;
 
-  final AuthService _authService = AuthService();
-  final NotionService _notionService = NotionService();
-  final WebScraperService _scraperService = WebScraperService();
+  final AuthService _authService = locator<AuthService>();
+  final NotionService _notionService = locator<NotionService>();
+  final WebScraperService _scraperService = locator<WebScraperService>();
 
   final TextEditingController _titleController = TextEditingController();
 

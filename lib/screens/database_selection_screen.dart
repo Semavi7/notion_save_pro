@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/notion_service.dart';
 import '../models/notion_database.dart';
+import '../utils/locator.dart';
 
 /// Database seçim ekranı
 class DatabaseSelectionScreen extends StatefulWidget {
@@ -12,8 +13,8 @@ class DatabaseSelectionScreen extends StatefulWidget {
 }
 
 class _DatabaseSelectionScreenState extends State<DatabaseSelectionScreen> {
-  final AuthService _authService = AuthService();
-  final NotionService _notionService = NotionService();
+  final AuthService _authService = locator<AuthService>();
+  final NotionService _notionService = locator<NotionService>();
 
   List<NotionDatabase> _databases = [];
   bool _isLoading = true;

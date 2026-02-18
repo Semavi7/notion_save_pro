@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:app_links/app_links.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../services/auth_service.dart';
+import '../utils/locator.dart';
 
 /// Notion OAuth login ekranı
 class LoginScreen extends StatefulWidget {
@@ -14,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final AuthService _authService = AuthService();
+  final AuthService _authService = locator<AuthService>();
   final AppLinks _appLinks = AppLinks();
   StreamSubscription? _linkSubscription;
   bool _isLoading = false;
