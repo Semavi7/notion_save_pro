@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widget_previews.dart'; // Önizleme için eklendi
 import '../services/auth_service.dart';
 import '../services/notion_service.dart';
 import '../models/notion_template.dart';
@@ -133,7 +132,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     if (_error != null && _templates.isEmpty) {
       return Center(
         // GÜNCELLENDİ: Hata/Bilgi ekranı taşmasın diye SingleChildScrollView eklendi
-        child: SingleChildScrollView( 
+        child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -244,18 +243,4 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
       },
     );
   }
-}
-
-// ----- ÖNİZLEME (PREVIEW) BÖLÜMÜ -----
-@Preview()
-Widget templateSelectionScreenPreview() {
-  
-  if (!locator.isRegistered<AuthService>() || !locator.isRegistered<NotionService>()) {
-    setupLocator(); 
-  }
-
-  return const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: TemplateSelectionScreen(),
-  );
 }

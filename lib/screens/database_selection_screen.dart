@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widget_previews.dart';
 import '../services/auth_service.dart';
 import '../services/notion_service.dart';
 import '../models/notion_database.dart';
@@ -87,7 +86,8 @@ class _DatabaseSelectionScreenState extends State<DatabaseSelectionScreen> {
   // GÜNCELLENDİ: Hata ekranı uzun mesajlarda taşmasın diye SingleChildScrollView eklendi
   Widget _buildError() {
     return Center(
-      child: SingleChildScrollView( // Taşmaya karşı güvenlik kalkanı
+      child: SingleChildScrollView(
+        // Taşmaya karşı güvenlik kalkanı
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -161,18 +161,4 @@ class _DatabaseSelectionScreenState extends State<DatabaseSelectionScreen> {
       },
     );
   }
-}
-
-// ----- ÖNİZLEME (PREVIEW) BÖLÜMÜ -----
-@Preview()
-Widget databaseSelectionScreenPreview() {
-  
-  if (!locator.isRegistered<AuthService>()) {
-    setupLocator(); 
-  }
-
-  return const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: DatabaseSelectionScreen(),
-  );
 }

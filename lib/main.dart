@@ -81,55 +81,70 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initialize() async {
-    // Önce OAuth callback'i kontrol et
-    final initialUri = await _appLinks.getInitialLink();
+    try {
+      // Önce OAuth callback'i kontrol et
+      final initialUri = await _appLinks.getInitialLink();
 
-    if (initialUri != null && initialUri.scheme == 'notionsavepro') {
-      Fluttertoast.showToast(msg: '📲 OAuth callback detected');
+      if (initialUri != null && initialUri.scheme == 'notionsavepro') {
+        Fluttertoast.showToast(msg: '📲 OAuth callback detected');
 
-      final code = initialUri.queryParameters['code'];
+        final code = initialUri.queryParameters['code'];
 
-      if (code != null) {
-        Fluttertoast.showToast(msg: '🔑 Code received: ${code.substring(0, 8)}...');
+        if (code != null) {
+          Fluttertoast.showToast(msg: '🔑 Code received: ${code.substring(0, 8)}...');
 
-        // Token exchange yap
-        final success = await _authService.exchangeCodeForToken(code);
+          // Token exchange yap
+          final success = await _authService.exchangeCodeForToken(code);
 
-        if (success && mounted) {
-          Fluttertoast.showToast(msg: '✅ Login successful!');
-          // Token alındı, database selection'a git
-          await Future.delayed(const Duration(milliseconds: 500));
-          Navigator.pushReplacementNamed(context, '/database-selection');
-          return;
-        } else {
-          Fluttertoast.showToast(msg: '❌ Login failed!');
+          if (success && mounted) {
+            Fluttertoast.showToast(msg: '✅ Login successful!');
+            // Token alındı, database selection'a git
+            await Future.delayed(const Duration(milliseconds: 500));
+            Navigator.pushReplacementNamed(context, '/database-selection');
+            return;
+          } else {
+            Fluttertoast.showToast(msg: '❌ Login failed!');
+          }
         }
       }
-    }
 
-    // OAuth callback yoksa normal akışı sürdür
-    _checkAuthStatus();
+      // OAuth callback yoksa normal akışı sürdür
+      await _checkAuthStatus();
+    } catch (e) {
+      print('❌ _initialize error: $e');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    }
   }
 
   Future<void> _checkAuthStatus() async {
     await Future.delayed(const Duration(seconds: 1)); // Splash göster
 
-    final isLoggedIn = await _authService.isLoggedIn();
+    try {
+      final isLoggedIn = await _authService.isLoggedIn();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (!isLoggedIn) {
-      // Giriş yapmamış -> Login ekranına
-      Navigator.pushReplacementNamed(context, '/login');
-    } else {
-      final isSetupComplete = await _authService.isSetupComplete();
-
-      if (!isSetupComplete) {
-        // Setup tamamlanmamış -> Database seçimine
-        Navigator.pushReplacementNamed(context, '/database-selection');
+      if (!isLoggedIn) {
+        // Giriş yapmamış -> Login ekranına
+        Navigator.pushReplacementNamed(context, '/login');
       } else {
-        // Her şey tamam -> Ana ekrana
-        Navigator.pushReplacementNamed(context, '/home');
+        final isSetupComplete = await _authService.isSetupComplete();
+
+        if (!isSetupComplete) {
+          // Setup tamamlanmamış -> Database seçimine
+          Navigator.pushReplacementNamed(context, '/database-selection');
+        } else {
+          // Her şey tamam -> Ana ekrana
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      }
+    } catch (e) {
+      // flutter_secure_storage veya diğer servisler hata verirse login'e git
+      print('❌ _checkAuthStatus error: $e');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
       }
     }
   }

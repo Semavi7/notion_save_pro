@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/widget_previews.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:app_links/app_links.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -141,8 +140,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: SafeArea(
-          child: Center( // İçeriği dikeyde ortalamak için Center ekledik
-            child: SingleChildScrollView( // Taşmayı önleyen ve kaydırma sağlayan widget
+          child: Center(
+            // İçeriği dikeyde ortalamak için Center ekledik
+            child: SingleChildScrollView(
+              // Taşmayı önleyen ve kaydırma sağlayan widget
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -292,18 +293,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
-}
-
-// ----- ÖNİZLEME (PREVIEW) BÖLÜMÜ -----
-@Preview()
-Widget loginScreenPreview() {
-  // Preview ortamı için locator'ı kontrol edip başlatıyoruz
-  if (!locator.isRegistered<AuthService>()) {
-    setupLocator(); 
-  }
-
-  return const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: LoginScreen(),
-  );
 }
