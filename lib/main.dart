@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:notion_save_pro/models/article.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:app_links/app_links.dart';
@@ -312,10 +313,23 @@ class _SaveHandlerState extends State<SaveHandler> {
         return;
       }
 
+      // Kullanıcının düzenlediği başlığı kullan (dialog'da değiştirilmiş olabilir)
+      final userTitle = _titleController.text.trim().isNotEmpty
+          ? _titleController.text.trim()
+          : article.title;
+
+      final finalArticle = Article(
+        url: article.url,
+        title: userTitle,
+        description: article.description,
+        imageUrl: article.imageUrl,
+        blocks: article.blocks,
+      );
+
       Fluttertoast.showToast(msg: "💾 Notion'a kaydediliyor...");
 
       // Notion'a kaydet
-      final success = await _notionService.savePage(article: article);
+      final success = await _notionService.savePage(article: finalArticle);
 
       if (success) {
         _showToast("✅ Başarıyla kaydedildi!");
